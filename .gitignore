@@ -1,0 +1,27 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+.jupyter/
+dados/brutos/*
+!dados/brutos/.gitkeep
+dados/tratados/*
+!dados/tratados/.gitkeep
+*.log
+.env
+.env.*
+*.egg-info/
+build/
+dist/
+*.egg-info/
+build/
+dist/
+
+.apresentacao_build/
+.apresentacao_revisao/
+.playwright-mcp/
+apresentacao/
+
+# Resultados gerados (grandes; nao versionados)
+resultados/
