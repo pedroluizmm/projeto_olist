@@ -1,123 +1,71 @@
-# Projeto Olist — tempo de entrega
+# Projeto 2 — Previsão do Tempo de Entrega na Olist
 
-Ciência dos Dados (T326), UNIFOR — Projeto 2: regressão supervisionada do tempo
-entre compra e recebimento, em dias, usando informações disponíveis na compra.
-Unidade de análise: um pedido. O alcance é condicionado aos pedidos entregues
-observados no dataset; não inclui previsão de cancelamento ou probabilidade de entrega.
+**UNIFOR · T326 — Ciência dos Dados · Prof. Caio Ponte · Turma 16/17**  
+**Equipe:** Mergulhadores da Deep Web
 
-## Estado da entrega
+Pipeline completo de Aprendizado de Máquina (regressão supervisionada) para estimar, **no momento da compra**, quantos dias um pedido levará entre a compra e a entrega ao cliente utilizando o [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce).
 
-TASK 01: preparação e 30 features. TASK 02: EDA, pré-processamento, baseline,
-Ridge, DecisionTree e RandomForest treinados, com busca limitada de hiperparâmetros.
-TASK 04: revisão documental após auditoria independente, relatada pelo usuário como
-**APROVADO COM RESSALVAS**. Nesta revisão não houve treinamento, inferência, nova
-consulta ao teste, alteração de métricas ou modificação de registros históricos.
+---
 
-| Modelo | MAE validação (dias) | RMSE validação (dias) | R² validação |
-|---|---:|---:|---:|
-| Ridge | 4,2596 | 5,7513 | 0,3221 |
-| Random Forest | 4,2837 | 5,6991 | 0,3344 |
-| Árvore | 4,3972 | 5,8639 | 0,2953 |
-| Baseline mediana | 5,4554 | 7,0402 | −0,0157 |
+## Visão geral e principais resultados
 
-Ridge (`alpha=1`) e Random Forest tiveram desempenho muito próximo na validação,
-sem vantagem estatisticamente demonstrada para a Ridge. A diferença de MAE foi
-0,0241 dia. A escolha respeitou o critério de MAE previamente definido; sua
-simplicidade relativa também favorece interpretação e custo computacional.
+- **Amostra:** `96.164` pedidos válidos após filtragem sequencial a partir dos `99.441` pedidos originais (`status == "delivered"`, data de entrega válida, com itens, tempo `> 0` e ruído extremo `> 60` dias removido).
+- **Variável alvo (`delivery_time_days`):** `(order_delivered_customer_date - order_purchase_timestamp) / 86.400` segundos (média `12,32` dias · mediana `10,20` dias · desvio padrão `8,37` dias).
+- **Features:** `30` variáveis construídas exclusivamente com dados disponíveis no instante da compra (`26` numéricas e `4` categóricas: `customer_state`, `main_category`, `purchase_weekday`, `purchase_month`).
+- **Divisão e validação:** `80%` treino (`76.931` pedidos) / `20%` teste reservado (`19.233` pedidos) com `random_state=42`, e ajuste de hiperparâmetros com `KFold(5, shuffle=True, random_state=42)` dentro do `Pipeline` (imputação, `log1p`, padronização e `OneHotEncoder` sem vazamento → `146` colunas).
 
-No teste já avaliado: **MAE 4,1081 dias**, RMSE **5,5279 dias** e **R² −0,0246**.
-O MAE diminuiu **14,87%** frente ao baseline mediana (4,8258 dias). O R² convencional
-usa a média do alvo do próprio conjunto avaliado: o valor negativo não anula a
-melhoria de MAE, mas revela limitações de generalização e calibração temporal.
-Segundo os números da auditoria fornecidos pelo usuário, a média do alvo passou de
-**13,27 dias no ajuste final** para **8,37 dias no teste**, enquanto a previsão média
-foi **10,51 dias**, com superestimação média aproximada de **2,15 dias**. A menor
-variância do alvo no teste reduz a referência por observação do denominador do R². Não se recalculou o teste
-para esta revisão; esses números são arredondados e suas diferenças não devem
-substituir estatísticas calculadas originalmente com precisão completa.
+### Benchmark no conjunto de teste (`19.233` pedidos)
 
-## Amostras e processamento
+| Modelo | Otimização (CV 5 folds) | MAE (dias) | RMSE (dias) | R² | MAE CV |
+|---|---|---:|---:|---:|---:|
+| **Gradient Boosting (`HistGradientBoostingRegressor`)** | `RandomizedSearchCV` (10 comb.) | **4,535** | **6,637** | **0,390** | **4,493** |
+| Random Forest (`RandomForestRegressor`) | `RandomizedSearchCV` (10 comb.) | 4,584 | 6,684 | 0,381 | 4,536 |
+| Árvore de Decisão (`DecisionTreeRegressor`) | `GridSearchCV` (16 comb.) | 4,790 | 6,929 | 0,335 | 4,718 |
+| Ridge (`Ridge`) | `GridSearchCV` (6 comb.) | 4,814 | 6,938 | 0,333 | 4,734 |
+| Baseline constante (`DummyRegressor(median)`) | — | 5,970 | 8,768 | −0,065 | — |
 
-- **96.470 = 91.561 + 4.909**: coorte rotulada = amostras das divisões efetivas +
-  rótulos indisponíveis nos cortes de desenvolvimento.
-- **91.561 = 64.401 + 12.675 + 14.485**: treino inicial + validação + teste reservado.
-- **4.909 = 2.978 + 1.931**: exclusões por maturação no treino inicial e na validação.
-- **80.043 = 77.076 + 2.967**: ajuste final = treino inicial e validação
-  (**77.076 = 64.401 + 12.675**) + rótulos iniciais que amadureceram.
-- **2.978 = 2.967 + 11**: onze pedidos do período inicial ainda não estavam
-  entregues no corte final de 21/06/2018; continuaram fora do ajuste final.
+- **Redução de erro:** o **Gradient Boosting** reduz o MAE em **24,0%** frente ao baseline (`4,535` vs `5,970` dias) e supera amplamente a precisão pontual do prazo conservador informado pela Olist (`MAE = 12,649` dias).
+- **Diagnóstico de erros:** acerta bem na faixa central (`7–14` dias: `MAE = 3,24` d), mas subestima caudas longas (`30–60` dias: `MAE = 19,40` d), pois fatores pós-compra (atraso na postagem do vendedor, transportadora, greves e retenções fiscais) não estão disponíveis no checkout.
 
-Cortes por compra: validação desde 15/04/2018; teste desde 21/06/2018. Treino inicial
-exige entrega anterior a 15/04/2018; validação e ajuste final exigem entrega anterior
-a 21/06/2018, sempre com limite exclusivo. A purga evita usar rótulos futuros, mas
-favorece entregas rápidas perto dos cortes. Os 4.909 pedidos não foram apagados da
-coorte, e 2.967 foram reincorporados apenas quando seus rótulos estavam disponíveis.
+---
 
-Mediana numérica, categoria ausente explícita, one-hot, escala robusta na Ridge e
-remoção de constantes foram ajustados dentro dos pipelines, somente no treino de
-cada divisão. Extremos válidos foram preservados. O contrato mantém 30 entradas;
-duas constantes são removidas. São **143 colunas transformadas no treino inicial**
-e **144 no ajuste final**, devido ao vocabulário aprendido nos respectivos treinos.
-
-Na configuração salva da Random Forest, **`max_features=1.0` é float e considera
-todas as features em cada divisão**; `max_features=1` seria o inteiro de contagem
-de uma feature. Com bootstrap, essa configuração funciona essencialmente como
-bagging de árvores. A busca foi válida, porém limitada: quatro configurações da
-floresta, além de quatro da Ridge e seis da árvore. Não houve nova otimização.
-
-## Documentação e artefatos
-
-- [Resumo técnico para o professor](docs/resumo_task02.md).
-- [Treinamento, avaliação e interpretação corrigida](docs/treinamento_avaliacao.md).
-- [Limitações, decisões e ressalva de rastreabilidade](docs/limitacoes_decisoes.md).
-- [Reconciliação com a rubrica acadêmica](docs/rubrica_academica.md).
-- [Features finais](docs/features_task02.md) e [engenharia da TASK 01](docs/engenharia_features.md).
-- [Verificação documental da TASK 04](docs/task04/verificacao.md).
+## Estrutura do repositório
 
 ```text
-dados/brutos/                    ZIP original, somente leitura
-dados/tratados/                  CSV/Parquet e contrato das 30 entradas
-src/olist_features/              engenharia e auditoria da TASK 01
-src/olist_modeling/              EDA, pipelines e protocolo da TASK 02
-notebooks/                      01 preparação; 02 EDA; 03 treinamento/avaliação
-resultados/graficos/task02/      10 gráficos existentes
-resultados/tabelas/task02/       métricas, previsões, splits e registros históricos
-resultados/modelos/task02/       pipelines salvos e contrato de inferência
-docs/                           relatórios atualizados e planos históricos
-tests/                          testes dos experimentos
-.venv/                          Python 3.13.6 e kernel Olist local
-requirements*.txt               versões fixadas por etapa
+projeto-olist/
+├── dados/
+│   ├── brutos/brazilian-ecommerce.zip        # 9 CSVs originais do dataset Olist
+│   └── tratados/olist_dataset.parquet        # Dataset limpo (96.164 pedidos × 36 colunas)
+├── src/
+│   └── olist_features.py                     # Leitura do ZIP, engenharia das 30 features e limpeza
+├── notebooks/
+│   ├── 01_preparacao_dados.ipynb             # Definição do problema, impacto, features e limpeza
+│   ├── 02_eda.ipynb                          # Estatísticas, distribuições, IQR, correlações e mapa
+│   └── 03_modelagem.ipynb                    # Pipeline, busca de hiperparâmetros, benchmark e diagnóstico
+├── resultados/
+│   ├── graficos/                             # Gráficos 01_*.png a 10_*.png (EDA e modelagem)
+│   ├── modelos/melhor_modelo.joblib          # Pipeline final treinado (Gradient Boosting)
+│   └── tabelas/                              # CSVs e JSON das etapas 01, 02 e 03
+├── apresentacao/
+│   ├── index.html                            # Slides interativos HTML (15 slides 16:9)
+│   ├── Projeto_2_Olist.pdf                   # PDF exportado da apresentação (15 páginas)
+│   ├── roteiro.md                            # Roteiro cronometrado (15 min · 5 integrantes)
+│   ├── checagem_rubrica.md                   # Conferência com os requisitos do enunciado
+│   └── assets/                               # slides.css e slides.js
+└── requirements.txt                          # Dependências Python 3.13.6 verificadas
 ```
 
-## Consulta e reprodução histórica
+---
 
-Os resultados históricos registram **53 testes e 77 verificações aprovados**, além
-de cinco refits técnicos reprodutíveis. Não foram reexecutados na TASK 04. Modelos,
-previsões, métricas, divisões, gráficos, notebooks, código e logs permanecem intactos.
-`selection_frozen.json` foi regravado após a selagem inicial para acrescentar
-atestação de código; não há snapshot exato do `run.py` anterior. A auditoria relatada
-pelo usuário não encontrou sinal de consulta antecipada ao teste. Essa evidência
-não elimina a ressalva de rastreabilidade, detalhada no documento de limitações.
+## Como reproduzir e visualizar
 
-O [guia da TASK 02](docs/README_task02.md) preserva os comandos históricos de
-reprodução. Eles não devem ser executados sobre esta entrega para esta revisão:
-alguns refazem ajustes, leem o teste ou sobrescrevem documentos e manifestos. Os
-geradores antigos não incorporam estas correções textuais. Os manifestos originais
-continuam sendo snapshots das versões anteriores; não foram regravados para
-legitimar retrospectivamente a nova documentação.
-
-Verificação exclusivamente documental, sem carregar dados tabulares de teste ou
-executar modelos:
-
-```powershell
-.\.venv\Scripts\python.exe -B docs/task04/verificar_documentacao.py
-```
-
-## Entrega acadêmica
-
-O conteúdo técnico está pronto para orientar a produção dos slides, com as
-ressalvas explicitadas. O documento oficial do professor não foi localizado no
-projeto; a conferência utiliza os requisitos fornecidos pelo usuário, cuja versão
-oficial ainda deve ser confirmada. A entrega final informada é **vídeo de 10 a 20
-minutos, apresentado por slides, participação de todos os integrantes e envio do
-link do YouTube pelo AVA**. Slides, vídeo e envio não foram produzidos nesta tarefa.
+1. **Instalar dependências** (Python `3.13.6`):
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. **Executar os notebooks em ordem**:
+   - `notebooks/01_preparacao_dados.ipynb` → gera `dados/tratados/olist_dataset.parquet` e tabelas `01_*`
+   - `notebooks/02_eda.ipynb` → gera tabelas `02_*` e gráficos `01` a `06`
+   - `notebooks/03_modelagem.ipynb` → gera `resultados/modelos/melhor_modelo.joblib`, tabelas `03_*` e gráficos `07` a `10`
+3. **Apresentação**:
+   - Abrir `apresentacao/index.html` localmente no Chrome/Edge (`→`/`←` navegam, `F` tela cheia, `N` notas do apresentador, `P` imprimir/PDF) ou abrir diretamente `apresentacao/Projeto_2_Olist.pdf`.

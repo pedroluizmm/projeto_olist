@@ -1,7 +1,11 @@
-# Dependencias diretas verificadas com Python 3.13.6
+# Dependências verificadas no ambiente Python 3.13.6
 pandas==3.1.0
 numpy==2.5.4
 pyarrow==26.0.1
+scikit-learn==1.9.1
+matplotlib==3.11.2
+joblib==1.6.0
 ipykernel==7.4.0
 jupyterlab==4.6.5
-pytest==9.2.0
+nbformat==5.11.1
+nbconvert==7.17.2

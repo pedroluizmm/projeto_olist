@@ -1,0 +1,5 @@
+modelo,busca,combinações,melhores_parametros,MAE_cv,tempo_s
+Ridge,GridSearchCV,6,"{""alpha"": 1}",4.734122247410255,14
+Árvore de Decisão,GridSearchCV,16,"{""max_depth"": 16, ""min_samples_leaf"": 100}",4.717586812204873,29
+Random Forest,RandomizedSearchCV,10,"{""n_estimators"": 200, ""min_samples_leaf"": 5, ""max_features"": 0.3, ""max_depth"": 25}",4.53595648014982,682
+Gradient Boosting,RandomizedSearchCV,10,"{""min_samples_leaf"": 100, ""max_leaf_nodes"": 127, ""max_iter"": 300, ""learning_rate"": 0.03, ""l2_regularization"": 1}",4.4931412958890835,269

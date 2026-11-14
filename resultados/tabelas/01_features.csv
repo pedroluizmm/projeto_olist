@@ -1,0 +1,31 @@
+feature,tipo,origem,descrição
+products_value_total,numérica,order_items,Soma dos preços dos itens (R$)
+freight_value_total,numérica,order_items,Soma do frete dos itens (R$)
+order_value_total,numérica,order_items,Produtos + frete (R$)
+items_count,numérica,order_items,Número de itens do pedido
+products_count,numérica,order_items,Produtos distintos no pedido
+sellers_count,numérica,order_items,Vendedores distintos no pedido
+seller_states_count,numérica,sellers,UFs distintas dos vendedores
+same_state_items_fraction,numérica,sellers + customers,Fração de itens com vendedor na UF do cliente
+weight_g_total,numérica,products,Peso total dos itens (g)
+weight_g_mean,numérica,products,Peso médio por item (g)
+volume_cm3_total,numérica,products,Volume total: comprimento × altura × largura (cm³)
+length_cm_max,numérica,products,Maior comprimento entre os itens (cm)
+height_cm_max,numérica,products,Maior altura entre os itens (cm)
+width_cm_max,numérica,products,Maior largura entre os itens (cm)
+items_missing_weight_count,numérica,products,Itens sem peso válido
+items_missing_dimensions_count,numérica,products,Itens sem dimensões válidas
+items_missing_price_count,numérica,order_items,Itens sem preço válido
+items_missing_freight_count,numérica,order_items,Itens sem frete válido
+categories_count,numérica,products,Categorias distintas no pedido
+main_category,categórica,products,Categoria mais frequente do pedido
+items_missing_category_count,numérica,products,Itens sem categoria
+customer_state,categórica,customers,UF do cliente
+distance_km_mean,numérica,geolocation,"Distância média vendedor→cliente (Haversine, km)"
+distance_km_min,numérica,geolocation,Menor distância vendedor→cliente (km)
+distance_km_max,numérica,geolocation,Maior distância vendedor→cliente (km)
+items_missing_distance_count,numérica,geolocation,Itens sem coordenadas válidas
+purchase_weekday,categórica,orders,Dia da semana da compra (0=seg … 6=dom)
+purchase_month,categórica,orders,Mês da compra (1–12)
+purchase_hour,numérica,orders,Hora da compra (0–23)
+purchase_is_weekend,numérica,orders,Compra no sábado/domingo (1/0)

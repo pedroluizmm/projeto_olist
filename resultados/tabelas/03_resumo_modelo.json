@@ -1,0 +1,13 @@
+{
+  "n_total": 96164,
+  "n_treino": 76931,
+  "n_teste": 19233,
+  "n_colunas_pos_onehot": 146,
+  "melhor_modelo": "Gradient Boosting",
+  "mae_teste": 4.5352644803551,
+  "rmse_teste": 6.637091537481799,
+  "r2_teste": 0.3896484818963324,
+  "baseline_mae": 5.969565562107758,
+  "reducao_mae_pct": 24.02689218888868,
+  "olist_prazo_mae": 12.649019044716738
+}

@@ -1,0 +1,7 @@
+etapa,pedidos_restantes,removidos
+Pedidos originais,99441,0
+Status 'delivered',96478,2963
+Com data de entrega,96470,8
+Com itens,96470,0
+Tempo de entrega > 0,96470,0
+Entrega ≤ 60 dias (remove ruído),96164,306

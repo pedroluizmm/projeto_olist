@@ -23,5 +23,5 @@ dist/
 .playwright-mcp/
 apresentacao/
 
-# Resultados gerados (grandes; nao versionados)
-resultados/
+# Resultados: versionados, exceto temporarios de teste
+resultados/**/pytest-tmp/
